@@ -1,11 +1,10 @@
 import reflex as rx
-import clips
+from .SistemaDF import SistemaDifusoTarjetasGraficas
 
 class State(rx.State):
     """Estado de la aplicación para el sistema experto de tarjetas gráficas."""
     
     # Variables de estado
-    presupuesto: str = ""
     resolucion: str = ""
     configuracion: str = ""
     fps_objetivo: str = ""
@@ -13,10 +12,6 @@ class State(rx.State):
     recomendacion: str = ""
     regla_activada: str = ""
     hechos_activados: str = ""
-    
-    def set_presupuesto(self, presupuesto: str):
-        """Establece el presupuesto del usuario."""
-        self.presupuesto = presupuesto
     
     def set_resolucion(self, resolucion: str):
         """Establece la resolución deseada."""
@@ -35,86 +30,28 @@ class State(rx.State):
         self.potencia_gpu = potencia_gpu
     
     def obtener_recomendacion(self):
-        """Obtiene la recomendación del sistema experto CLIPS."""
-        if not self.presupuesto:
-            self.recomendacion = "Por favor, selecciona el presupuesto."
-            return
+        """Obtiene la recomendación del sistema difuso."""
+        # Crear instancia del sistema difuso
+        sistema_difuso = SistemaDifusoTarjetasGraficas()
         
-        if not self.resolucion:
-            self.recomendacion = "Por favor, selecciona la resolución."
-            return
+        # Preparar entrada para el sistema difuso
+        entrada = {
+            'resolucion': self.resolucion,
+            'configuracion': self.configuracion,
+            'fps_objetivo': self.fps_objetivo,
+            'potencia_gpu': self.potencia_gpu
+        }
         
-        if not self.configuracion:
-            self.recomendacion = "Por favor, selecciona la configuración."
-            return
-        
-        if not self.fps_objetivo:
-            self.recomendacion = "Por favor, selecciona el FPS objetivo."
-            return
-        
-        if not self.potencia_gpu:
-            self.recomendacion = "Por favor, selecciona la potencia de GPU."
-            return
-        
-        try:
-            # Crear el entorno CLIPS
-            env = clips.Environment()
-            
-            # Cargar las reglas (aquí deberías tener tu archivo .clp)
-            # env.load("reglas_tarjetas.clp")
-            
-            # Insertar hechos iniciales
-            env.assert_string(f"(presupuesto {self.presupuesto})")
-            env.assert_string(f"(resolucion {self.resolucion})")
-            env.assert_string(f"(configuracion {self.configuracion})")
-            env.assert_string(f"(fps_objetivo {self.fps_objetivo})")
-            env.assert_string(f"(potencia_gpu {self.potencia_gpu})")
-            
-            # Ejecutar el motor de inferencia
-            env.run()
-            
-            # Obtener hechos activados
-            hechos = []
-            for fact in env.facts():
-                if fact.template.name == "recomendacion":
-                    hechos.append(str(fact))
-            
-            if hechos:
-                self.recomendacion = hechos[0]
-                self.regla_activada = "Regla aplicada correctamente"
-                self.hechos_activados = "\n".join(hechos)
-            else:
-                self.recomendacion = "No se encontró una recomendación específica."
-                self.regla_activada = "Ninguna regla se activó"
-                self.hechos_activados = "No hay hechos activados"
-                
-        except Exception as e:
-            self.recomendacion = f"Error en el sistema experto: {str(e)}"
-            self.regla_activada = "Error"
-            self.hechos_activados = "Error en la ejecución"
+        # Procesar con el sistema difuso
+        self.recomendacion, self.regla_activada, self.hechos_activados = sistema_difuso.procesar_entrada(entrada)
 
 def index():
     return rx.hstack(
         # Panel izquierdo: Formulario
         rx.vstack(
-            rx.heading("Sistema Experto de Recomendación de Tarjetas Graficas para Gaming", size="5", color="blue.600"),
-            rx.text("Selecciona tus preferencias para obtener la mejor recomendación para gaming:", color="gray.600"),
-            
-            # Selector de presupuesto
-            rx.vstack(
-                rx.text("Presupuesto:", font_weight="bold", text_align="left"),
-                rx.select(
-                    ["bajo", "medio", "alto"],
-                    value=State.presupuesto,
-                    on_change=State.set_presupuesto,
-                    placeholder="Selecciona tu presupuesto",
-                    width="100%",
-                ),
-                align="start",
-                width="100%",
-                spacing="2",
-            ),
-            
+            rx.heading("Sistema Experto de Prediccion del uso de Tarjetas Graficas para Gaming", size="5", color="blue.600"),
+            rx.text("Selecciona tus preferencias para obtener la mejor predicción de uso para gaming:", color="gray.600"),
+
             # Selector de resolución
             rx.vstack(
                 rx.text("Resolución:", font_weight="bold", align="left"),
@@ -176,7 +113,7 @@ def index():
             ),
             
             rx.button(
-                "Obtener Recomendación",
+                "Obtener Predicción de uso de GPU y Temperatura",
                 on_click=State.obtener_recomendacion,
                 color_scheme="blue",
                 size="4",
@@ -185,7 +122,7 @@ def index():
             ),
             
             spacing="4",
-            padding="2rem",
+            padding="4rem",
             width="40%",
             bg="gray.50",
             border_radius="12px",
@@ -195,13 +132,13 @@ def index():
         # Panel derecho: Resultados
         rx.box(
             rx.vstack(
-                rx.heading("Recomendación del Sistema Experto", size="5", color="green.600"),
-                
-                # Mostrar recomendación
+                rx.heading("Predicción del Sistema Difuso", size="5", color="green.600"),
+
+                # Mostrar predicción
                 rx.cond(
                     State.recomendacion,
                     rx.vstack(
-                        rx.text("Recomendación:", font_weight="bold", color="gray.700", text_align="left"),
+                        rx.text("Predicción:", font_weight="bold", color="gray.700", text_align="left"),
                         rx.box(
                             rx.text(
                                 State.recomendacion,
@@ -224,11 +161,11 @@ def index():
                     rx.box(),
                 ),
                 
-                # Mostrar la regla CLIPS activada
+                # Mostrar el estado del sistema difuso
                 rx.cond(
                     State.regla_activada,
                     rx.vstack(
-                        rx.text("Regla CLIPS activada:", font_weight="bold", color="gray.700", text_align="left"),
+                        rx.text("Estado del Sistema Difuso:", font_weight="bold", color="gray.700", text_align="left"),
                         rx.box(
                             rx.text(
                                 State.regla_activada,
@@ -251,11 +188,11 @@ def index():
                     rx.box(),
                 ),
                 
-                # Mostrar los hechos activados
+                # Mostrar los resultados del sistema difuso
                 rx.cond(
                     State.hechos_activados,
                     rx.vstack(
-                        rx.text("Hechos activados:", font_weight="bold", color="gray.700", text_align="left"),
+                        rx.text("Resultados del Sistema Difuso:", font_weight="bold", color="gray.700", text_align="left"),
                         rx.box(
                             rx.text(
                                 State.hechos_activados,
@@ -283,7 +220,7 @@ def index():
                     ~State.recomendacion,
                     rx.vstack(
                         rx.icon("info", size=3, color="blue.400"),
-                        rx.text("Selecciona tus preferencias y haz clic en 'Obtener Recomendación' para ver la sugerencia del sistema experto.", 
+                        rx.text("Selecciona tus preferencias y haz clic en 'Obtener Recomendación' para ver la sugerencia del sistema difuso.", 
                                text_align="center", color="gray.500"),
                         spacing="2",
                         align="center",
@@ -297,13 +234,17 @@ def index():
                 align="start",
                 width="100%",
             ),
-            
+            margin_top="4rem",
+            margin_right="2rem",
+            border="1px solid",
+            border_color="gray.200",
+            border_radius="12px",
             align="start",
-            width="100%",
+            width="60%",
             spacing="6",
             padding="2rem",
             bg="gray.100",
-            min_height="100vh",
+            min_height="50vh",
         ),
         
         spacing="6",
@@ -314,4 +255,4 @@ def index():
 
 # Configuración de la app
 app = rx.App()
-app.add_page(index, title="Sistema Experto de Tarjetas Graficas para Gaming")
+app.add_page(index, title="Sistema Experto de Usos de Tarjetas Graficas para Gaming")

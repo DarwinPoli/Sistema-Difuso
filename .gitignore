@@ -4,3 +4,6 @@ __pycache__/
 *.db
 .states
 *.py[cod]
+temperatura_caso.png
+uso_gpu_caso.png
+resultado.png

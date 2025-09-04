@@ -23,7 +23,7 @@ class State(rx.State):
     prediccion: str = ""
     regla_activada: str = ""
     cargando: bool = False
-    grafico_url: str = ""
+    grafico_url: str = "/tmp/uso_gpu_caso.png"
     
     def set_resolucion(self, resolucion: str):
         """Establece la resolución deseada."""
@@ -276,6 +276,15 @@ def index():
                     rx.box(),
                 ),
                 
+                # Imagen del resultado (uso_gpu y temperatura)
+                rx.cond(
+                    State.grafico_url,
+                    rx.box(
+                        rx.image(src="/tmp/uso_gpu_caso.png", width="100%", border_radius="8px", alt="Resultados del sistema difuso"),
+                        width="100%",
+                    ),
+                    rx.box(),
+                ),
 
 
 

@@ -2,6 +2,7 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import itertools
+import random
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -180,7 +181,7 @@ class SistemaDifusoTarjetasGraficas:
                 if conf == 'ultra' and fps == 'extremo':
                     return 'alta', 'caliente'    # Máximo rendimiento
                 else:
-                    return 'media', 'tibio'      # Cómodo para GPU ultra
+                    return 'media', 'caliente'    # Cómodo para GPU ultra
         
         # 6. CASOS DE GPU BAJA (limitaciones críticas)
         if gpu == 'baja':
@@ -268,6 +269,8 @@ class SistemaDifusoTarjetasGraficas:
                 'descripcion': descripcion
             })
 
+            
+
             # Crear regla difusa (descomenta si tienes las variables definidas)
             
             rule = ctrl.Rule(
@@ -277,7 +280,10 @@ class SistemaDifusoTarjetasGraficas:
             rules.append(rule)
             
 
-    
+        # Mostrar solo 20 reglas aleatorias
+        reglas_aleatorias = random.sample(reglas_detalladas, min(20, len(reglas_detalladas)))
+        for i in reglas_aleatorias:
+            print(i['descripcion'])
 
         return reglas_detalladas, rules
 
@@ -394,32 +400,6 @@ class SistemaDifusoTarjetasGraficas:
         
         return prediccion, regla_activada
 
-
-
-    def generar_grafico_resultado(self, ruta_salida="/tmp/resultado.png"):
-        """Genera la gráfica de uso_gpu y temperatura con estilo .view"""
-        try:
-            fig, axes = plt.subplots(2, 1, figsize=(8, 6))
-
-            # Uso GPU
-            self.uso_gpu.view(sim=self.simulador, ax=axes[0])
-            axes[0].set_title("Uso de GPU")
-            axes[0].set_xlabel("uso_gpu")
-            axes[0].set_ylabel("Membership")
-
-            # Temperatura
-            self.temperatura.view(sim=self.simulador, ax=axes[1])
-            axes[1].set_title("Temperatura")
-            axes[1].set_xlabel("temperatura")
-            axes[1].set_ylabel("Membership")
-
-            fig.tight_layout()
-            fig.savefig(ruta_salida, bbox_inches='tight')
-            plt.close(fig)
-            return ruta_salida
-        except Exception:
-            plt.close('all')
-            raise
 
 
     def _convertir_uso_gpu_a_etiqueta(self, valor):

@@ -74,7 +74,7 @@ def index():
     return rx.hstack(
         # Panel izquierdo: Formulario
         rx.vstack(
-            rx.heading("Sistema Experto de Prediccion del uso de Tarjetas Graficas para Gaming", size="5", color="blue.600"),
+            rx.heading("Sistema Difuso de Prediccion del uso de Tarjetas Graficas para Gaming", size="5", color="blue.600"),
             rx.text("Selecciona tus preferencias para obtener la mejor predicción de uso para gaming:", color="gray.600"),
 
             # Selector de resolución
@@ -167,7 +167,7 @@ def index():
             
             # Selector de potencia de GPU
             rx.vstack(
-                rx.text("Potencia de GPU:", font_weight="bold", text_align="left"),
+                rx.text("Potencia de GPU -> Gamas: (0-20) Bajo, (20-50) Medio, (50-70) Alto, 70-100) Ultra", font_weight="bold", text_align="left"),
                 rx.slider(
                     min_=0,
                     max_=100,
@@ -177,7 +177,7 @@ def index():
                     width="100%",
                     is_disabled=State.cargando,
                 ),
-                rx.text(f"Valor: {State.potencia_gpu[0]}%", color="blue.600", font_size="sm"),
+                rx.text(f"Valor: {State.potencia_gpu[0]} puntos", color="blue.600", font_size="sm"),
                 align="start",
                 width="100%",
                 spacing="2",
@@ -203,7 +203,7 @@ def index():
             
             spacing="4",
             padding="4rem",
-            width="40%",
+            width="55%",
             bg="gray.50",
             border_radius="12px",
             box_shadow="lg",
@@ -258,7 +258,7 @@ def index():
                                 rx.text(f"{State.potencia_gpu[0]} puntos (0-25): Bajo, (25-55): Medio, (55-80): Alto, (80-100): Ultra)", font_size="0.9rem", color="blue.700"),
                                 rx.divider(),
                                 rx.text("Estado del Sistema Difuso:", font_weight="bold", color="blue.800"),
-                                rx.text(State.regla_activada, font_family="monospace", font_size="0.8rem", color="blue.700"),
+                                rx.text(State.regla_activada, font_family="monospace", font_size="0.8rem", color="blue.700", white_space="pre-line"),
                                 spacing="1",
                                 align="start",
                             ),
@@ -275,16 +275,7 @@ def index():
                     ),
                     rx.box(),
                 ),
-                
-                # Imagen del resultado (uso_gpu y temperatura)
-                rx.cond(
-                    State.grafico_url,
-                    rx.box(
-                        rx.image(src="/tmp/uso_gpu_caso.png", width="100%", border_radius="8px", alt="Resultados del sistema difuso"),
-                        width="100%",
-                    ),
-                    rx.box(),
-                ),
+
 
 
 
@@ -313,7 +304,7 @@ def index():
             border_color="gray.200",
             border_radius="12px",
             align="start",
-            width="60%",
+            width="45%",
             spacing="6",
             padding="2rem",
             bg="gray.100",

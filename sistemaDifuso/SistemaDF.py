@@ -124,69 +124,90 @@ class SistemaDifusoTarjetasGraficas:
             if gpu == 'baja':
                 return 'media', 'normal'
             elif gpu == 'media':
-                return 'baja', 'normal'
-            else:
-                return 'baja', 'normal'
+                return 'baja', 'normal'      # GPU media con todo bajo = uso muy bajo
+            elif gpu == 'alta':
+                return 'baja', 'normal'      # GPU alta con todo bajo = uso muy bajo
+            else:  # gpu == 'ultra'
+                return 'baja', 'normal'      # GPU ultra con todo bajo = uso muy bajo
         
+        # 2. CASO TODO ULTRA: res=ultra, conf=ultra, fps=extremo
+        if res == 'ultra' and conf == 'ultra' and fps == 'extremo':
+            if gpu == 'baja':
+                return 'critico', 'critica'  # GPU baja con todo ultra = imposible
+            elif gpu == 'media':
+                return 'critico', 'critica'  # GPU media con todo ultra = sobrecarga
+            elif gpu == 'alta':
+                return 'critico', 'caliente' # GPU alta con todo ultra = sobrecarga
+            else:  # gpu == 'ultra'
+                return 'alta', 'caliente'    # GPU ultra con todo ultra = alta carga
+        
+        # 3. CASO TODO MEDIO: res=media, conf=media, fps=estandar
         if res == 'media' and conf == 'media' and fps == 'estandar':
             if gpu == 'baja':
-                return 'critico', 'caliente'
+                return 'alta', 'tibio'       # GPU baja con todo medio = sobrecarga
             elif gpu == 'media':
-                return 'alta', 'tibio'
+                return 'media', 'normal'     # GPU media con todo medio = balanceado
             elif gpu == 'alta':
-                return 'media', 'normal'
-            else:
-                return 'baja', 'normal'
+                return 'baja', 'normal'      # GPU alta con todo medio = cómodo
+            else:  # gpu == 'ultra'
+                return 'baja', 'normal'      # GPU ultra con todo medio = muy cómodo
         
         if res == 'alta' and conf == 'alta' and fps == 'competitivo':
             if gpu == 'baja':
-                return 'critico', 'critica'
+                return 'critico', 'critica'  # GPU baja con todo alto = imposible
             elif gpu == 'media':
-                return 'critico', 'caliente'
+                return 'critico', 'caliente' # GPU media con todo alto = sobrecarga
             elif gpu == 'alta':
-                return 'alta', 'caliente'
-            else:
-                return 'media', 'tibio'
+                return 'alta', 'tibio'       # GPU alta con todo alto = balanceado
+            else:  # gpu == 'ultra'
+                return 'media', 'normal'     # GPU ultra con todo alto = cómodo
         
-        if res == 'ultra' and conf == 'ultra' and fps == 'extremo':
-            if gpu == 'baja':
-                return 'critico', 'critica'
-            elif gpu == 'media':
-                return 'critico', 'critica'
-            elif gpu == 'alta':
-                return 'critico', 'caliente'
-            else:
-                return 'alta', 'caliente'
-        
+        # 5. CASOS DE RESOLUCIÓN ULTRA (cualquier configuración)
         if res == 'ultra':
-            base_uso = 'alta' if gpu in ['alta', 'ultra'] else 'critico'
-            base_temp = 'caliente' if gpu in ['alta', 'ultra'] else 'critica'
-            
-            if conf == 'ultra' or fps == 'extremo':
-                if base_uso != 'critico':
-                    base_uso = 'critico'
-                if gpu != 'ultra':
-                    base_temp = 'critica'
-            
-            if gpu == 'ultra' and conf in ['alta', 'ultra'] and fps in ['competitivo', 'extremo']:
-                base_uso = 'alta'
-                base_temp = 'caliente'
-            
-            return base_uso, base_temp
-        
-        if gpu == 'baja':
-            if (fps in ['competitivo', 'extremo'] or 
-                res in ['alta', 'ultra'] or 
-                conf in ['alta', 'ultra']):
-                return 'critico', 'critica'
-            elif res == 'media' or conf == 'media':
-                return 'alta', 'caliente'
-        
-        if fps in ['competitivo', 'extremo']:
             if gpu == 'baja':
-                return 'critico', 'critica'
-            elif gpu == 'media' and (res in ['alta', 'ultra'] or conf in ['alta', 'ultra']):
-                return 'critico', 'caliente'
+                return 'critico', 'critica'  # GPU baja nunca puede manejar ultra
+            elif gpu == 'media':
+                if conf == 'ultra' or fps == 'extremo':
+                    return 'critico', 'critica'  # Sobreconfiguración
+                else:
+                    return 'critico', 'caliente' # Sobrecarga pero manejable
+            elif gpu == 'alta':
+                if conf == 'ultra' and fps == 'extremo':
+                    return 'critico', 'caliente' # Límite de capacidad
+                else:
+                    return 'alta', 'caliente'    # Alta carga pero estable
+            else:  # gpu == 'ultra'
+                if conf == 'ultra' and fps == 'extremo':
+                    return 'alta', 'caliente'    # Máximo rendimiento
+                else:
+                    return 'media', 'tibio'      # Cómodo para GPU ultra
+        
+        # 6. CASOS DE GPU BAJA (limitaciones críticas)
+        if gpu == 'baja':
+            if res in ['alta', 'ultra'] or conf in ['alta', 'ultra'] or fps in ['competitivo', 'extremo']:
+                return 'critico', 'critica'  # GPU baja no puede manejar cargas altas
+            elif res == 'media' or conf == 'media':
+                return 'alta', 'caliente'    # GPU baja con configuraciones medias
+        
+        # 7. CASOS DE FPS EXTREMO (demandas altas)
+        if fps == 'extremo':
+            if gpu == 'baja':
+                return 'critico', 'critica'  # Imposible
+            elif gpu == 'media':
+                if res in ['alta', 'ultra'] or conf in ['alta', 'ultra']:
+                    return 'critico', 'critica'  # Sobreconfiguración
+                else:
+                    return 'critico', 'caliente' # Sobrecarga
+            elif gpu == 'alta':
+                if res == 'ultra' or conf == 'ultra':
+                    return 'critico', 'caliente' # Límite
+                else:
+                    return 'alta', 'caliente'    # Alta carga
+            else:  # gpu == 'ultra'
+                if res == 'ultra' and conf == 'ultra':
+                    return 'alta', 'caliente'    # Máximo rendimiento
+                else:
+                    return 'media', 'tibio'      # Cómodo
         
         peso_res = 1.8
         peso_conf = 1.0
@@ -438,4 +459,3 @@ class SistemaDifusoTarjetasGraficas:
                                key=lambda x: abs(x[1] - valor))
         return resolucion_cercana[0]
 
-    
